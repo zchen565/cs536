@@ -1,3 +1,14 @@
+
+///////////////////////////////////////////////////////////////////////////////
+// Title:            CS536 P2
+// Files:            P2.java Makefile *.txt *.in
+// Semester:         CS536 Fall 2020
+//
+// Author:           Zihao Chen & 
+// Email:            zchen565@wisc.edu
+// CS Login:         zihaoc
+// Lecturer's Name:  Aws Albarghouthi
+////////////////////////////////////////////////////////////////////////////////
 import java.util.*;
 import java.io.*;
 import java_cup.runtime.*; // defines Symbol
@@ -9,26 +20,26 @@ import java_cup.runtime.*; // defines Symbol
  * with tokens).
  */
 public class P2 {
-    // file context
-    private static final String[] genericTokenInputs = { "bool", "int", "void", "true", "false", "struct", "cin",
-            "cout", "if", "else", "while", "return", "{", "}", "(", ")", ";", ",", ".", "<<", ">>", "++", "--", "+",
-            "-", "*", "/", "!", "&&", "||", "==", "!=", "<", ">", "<=", ">=", "=" };
-
-    // An array of token inputs that will be parsed to intTokenVal
-    private static final String[] intLitTokenInputs = { "1", "2", "3", "100", "2147483647" };
-
-    // An array of token inputs that will be parsed to idTokenVal
-    private static final String[] idTokenInputs = { "a", "b", "c", "i", "apple", "test", "x", "y", "z" };
-
-    // An array of the previous arrays
-    private static final String[][] tokenInputs = { genericTokenInputs, intLitTokenInputs, idTokenInputs };
 
     public static void main(String[] args) throws IOException {
         // exception may be thrown by yylex
         // test all tokens
-        testAllTokens();
+
+        String input_file = "validString.in";
+        String output_file = "validString.out";
+
+        testAllTokens(input_file, output_file);
+
+        CharNum.num = 1;
+        input_file = "invalidString.in";
+        output_file = "invalidString.out";
+        testAllTokens(input_file, output_file);
         CharNum.num = 1;
 
+        input_file = "allTokens.in";
+        output_file = "allTokens.out";
+        testAllTokens(input_file, output_file);
+        CharNum.num = 1;
         // ADD CALLS TO OTHER TEST METHODS HERE
     }
 
@@ -40,18 +51,28 @@ public class P2 {
      * one per line, we can verify correctness of the scanner by comparing the input
      * and output files (e.g., using a 'diff' command).
      */
-    private static void testAllTokens() throws IOException {
+    /**
+     * testAllTokens Open and read from file allTokens.txt For each token read,
+     * write the corresponding string to allTokens.out If the input file contains
+     * all tokens, one per line, we can verify correctness of the scanner by
+     * comparing the input and output files (e.g., using a 'diff' command).
+     * 
+     * @param input_file  we choose our input file
+     * @param output_file generate output file
+     * @throws IOException
+     */
+    private static void testAllTokens(String input_file, String output_file) throws IOException {
         // open input and output files
         FileReader inFile = null;
         PrintWriter outFile = null;
         try {
-            inFile = new FileReader("allTokens.in");
-            outFile = new PrintWriter(new FileWriter("allTokens.out"));
+            inFile = new FileReader(input_file);
+            outFile = new PrintWriter(new FileWriter(output_file));
         } catch (FileNotFoundException ex) {
-            System.err.println("File allTokens.in not found.");
+            System.err.println("File" + input_file + "not found.");
             System.exit(-1);
         } catch (IOException ex) {
-            System.err.println("allTokens.out cannot be opened.");
+            System.err.println(output_file + " cannot be opened.");
             System.exit(-1);
         }
 

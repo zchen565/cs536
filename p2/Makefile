@@ -38,7 +38,9 @@ ErrMsg.class: ErrMsg.java
 test:
 	java -cp $(CP) P2 
 	diff allTokens.in allTokens.out
-
+	diff validString.txt validString.out
+	diff invalidString.txt invalidString.out
+	
 ###
 # clean up
 ###
@@ -47,4 +49,4 @@ clean:
 	rm -f *~ *.class egg.jlex.java
 
 cleantest:
-	rm -f allTokens.out
+	rm -f allTokens.out validString.out invalidString.out
