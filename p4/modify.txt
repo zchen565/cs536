@@ -1,0 +1,38 @@
+Sym.java
+some new subclass or fields
+
+
+
+************************************
+ast.java -> IdNode
+
+4. ExpNode and its subclass    // the fundamental part 
+605   787
+IdNode //Done need recheck
+DotAccessExpNode !!!!!!!!!!!!!!!!!!!!!!
+
+3. StmtNode and its subclass   // override analysis()
+If
+Ifelse
+While
+Repeat
+
+2. DeclNode and its subclass   // override analysis()
+
+!!!!
+
+1. Basic Nodes 
+DeclList
+FormalList
+FnBody
+
+
+typeNode //Done
+
+************************************
+P4.java \\Done
+
+ErrMsg.java \\Done
+
+************************************
+test: nameErrors.egg test.egg
