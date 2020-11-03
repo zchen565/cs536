@@ -19,54 +19,46 @@ public class Sym {
         return type;
     }
 
-    // The part for struct cases (definition and usage)
-    private SymTable symTable;
-    private StructDeclNode struct;
+}
 
-    public void setStruct(StructDeclNode struct) {
-        this.struct = struct;
+/**
+ * this is only for struct definition
+ */
+class StructDefSym extends Sym {
+    // new fields
+    private SymTable symTab;
+
+    public StructDefSym(SymTable table) {
+        super("struct");
+        symTab = table;
     }
 
-    public StructDeclNode getStruct() {
-        return this.struct;
-    }
-
-    public void setSymTable(SymTable symTable) {
-        this.symTable = symTable;
-    }
-
-    public SymTable getSymTable(SymTable symTable) {
-        return this.symTable;
+    public SymTable getSymTable() {
+        return symTab;
     }
 }
 
+/**
+ * this is only for struct variable
+ */
 class StructSym extends Sym {
-    private SymTable symTable;
-    private StructDeclNode struct;
+    private IdNode structType; // name of the struct type
 
-    public StructSym(StructDeclNode struct) {
-        super("struct");
-        this.struct = struct;
+    public StructSym(IdNode id) {
+        super(id.toString());
+        structType = id;
     }
 
-    public StructDeclNode getStruct() {
-        return this.struct;
-    }
-
-    public void setSymTable(SymTable symTable) {
-        this.symTable = symTable;
-    }
-
-    public SymTable getSymTable(SymTable symTable) {
-        return this.symTable;
+    public IdNode getStructType() {
+        return structType;
     }
 }
 
 class FnSym extends Sym {
-    private LinkedList<String> paraType;
+    private List<String> paraType;
     private String reType;
 
-    public FnSym(String reType, LinkedList<String> paraType) {
+    public FnSym(String reType, List<String> paraType) {
         super("function");
         this.paraType = paraType;
         this.reType = reType;
@@ -74,6 +66,10 @@ class FnSym extends Sym {
 
     public int getParamNum() {
         return paraType.size();
+    }
+
+    public void addFormals(List<String> formalList) {
+        paraType = formalList;
     }
 
     public String toString() {

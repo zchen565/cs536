@@ -17,22 +17,27 @@ Ifelse
 While
 Repeat
 
-2. DeclNode and its subclass   // override analysis()
-
-!!!!
-
-1. Basic Nodes 
-DeclList
-FormalList
-FnBody
-
-
-typeNode //Done
 
 ************************************
-P4.java \\Done
+P4.java //Done
 
-ErrMsg.java \\Done
+ErrMsg.java //Done
 
 ************************************
 test: nameErrors.egg test.egg
+
+
+Steps:
+
+2
+DeclNodes: Sym analysis(SymTable) return type of decnode
+
+sub
+!!!!!!!!!!!!!!!!VarDeclNode！！！！！！！！！！
+new a StructSym
+
+3. check the difference between with our sym
+
+4.IdNode
+DotAccessExpNode
+

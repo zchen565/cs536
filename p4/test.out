@@ -1,0 +1,8 @@
+struct Point(struct){
+    int x(int);
+    int y(int);
+};
+
+int f(int, bool -> int)(int x(int), bool b(bool)) {
+}
+

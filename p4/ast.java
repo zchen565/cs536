@@ -134,8 +134,11 @@ class ProgramNode extends ASTnode {
 
     /**
      * analysis() added
+     * 
+     * @throws WrongArgumentException
+     * @throws EmptySymTableException
      */
-    public void analysis() {
+    public void analysis() throws EmptySymTableException, WrongArgumentException {
         SymTable symTable = new SymTable();
         myDeclList.analysis(symTable);
     }
@@ -163,16 +166,29 @@ class DeclListNode extends ASTnode {
 
     /**
      * analysis() added
+     * 
+     * @throws WrongArgumentException
+     * @throws EmptySymTableException
      */
-    public void analysis(SymTable symTable) throws EmptyStackException {
+    public void analysis(SymTable symTable) throws EmptySymTableException, WrongArgumentException {
         analysis(symTable, symTable);
     }
 
     /**
      * analysis(SymTable, SymTable) overload
+     * 
+     * @throws WrongArgumentException
+     * @throws EmptySymTableException
      */
-    public void analysis(SymTable symTable, SymTable globalTable) throws EmptyStackException {
-
+    public void analysis(SymTable symTable, SymTable globalTable)
+            throws EmptySymTableException, WrongArgumentException {
+        for (DeclNode node : myDecls) {
+            if (node instanceof VarDeclNode) {
+                ((VarDeclNode) node).analysis(symTable, globalTable);
+            } else {
+                node.analysis(symTable);
+            }
+        }
     }
 
     // list of kids (DeclNodes)
@@ -195,6 +211,41 @@ class FormalsListNode extends ASTnode {
         }
     }
 
+    /**
+     * this function helps us to generate FynSym
+     */
+    public LinkedList<String> getTypeList() {
+        LinkedList<String> paramTypes = new LinkedList<>();
+        for (FormalDeclNode formalDeclNode : myFormals) {
+            paramTypes.add(formalDeclNode.getTypeString());
+        }
+        return paramTypes;
+    }
+
+    /**
+     * for each formal decl in the list process the formal decl if there was no
+     * error, add type of formal decl to list
+     * 
+     * @throws WrongArgumentException
+     */
+    public List<String> analysis(SymTable symTable) throws EmptySymTableException, WrongArgumentException {
+        List<String> typeList = new LinkedList<String>();
+        for (FormalDeclNode node : myFormals) {
+            Sym sym = node.analysis(symTable);
+            if (sym != null) {
+                typeList.add(sym.getType());
+            }
+        }
+        return typeList;
+    }
+
+    /**
+     * return length
+     */
+    public int length() {
+        return myFormals.size();
+    }
+
     // list of kids (FormalDeclNodes)
     private List<FormalDeclNode> myFormals;
 
@@ -211,9 +262,9 @@ class FnBodyNode extends ASTnode {
         myStmtList.unparse(p, indent);
     }
 
-    public void analysis(SymTable symTable) {
-        myDeclList.nameAnalyzeFnBody(symTable);
-        myStmtList.nameAnalyze(symTable);
+    public void analysis(SymTable symTable) throws EmptySymTableException, WrongArgumentException {
+        myDeclList.analysis(symTable);
+        myStmtList.analysis(symTable);
     }
 
     // 2 kids
@@ -274,7 +325,7 @@ class ExpListNode extends ASTnode {
 // **********************************************************************
 
 abstract class DeclNode extends ASTnode {
-
+    abstract public Sym analysis(SymTable symTable) throws EmptySymTableException, WrongArgumentException;
 }
 
 class VarDeclNode extends DeclNode {
@@ -290,6 +341,62 @@ class VarDeclNode extends DeclNode {
         p.print(" ");
         myId.unparse(p, 0);
         p.println(";");
+    }
+
+    public Sym analysis(SymTable symTable) {
+        return analysis(symTable, symTable);
+    }
+
+    public Sym analysis(SymTable symTable, SymTable globalTable) {
+        boolean boom = false;
+        String name = myId.getStrVal();
+        Sym sym = null;
+        IdNode structId = null;
+
+        if (myType instanceof VoidNode) { // check for void type
+            ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(), "Non-function declared void");
+            boom = true;
+        }
+
+        else if (myType instanceof StructNode) {
+            structId = ((StructNode) myType).getIdNode();
+            sym = globalTable.lookupGlobal(structId.getStrVal());
+
+            if (sym == null || !(sym instanceof StructDefSym)) {
+                ErrMsg.fatal(structId.getLineNum(), structId.getCharNum(), "Invalid name of struct type");
+                boom = true;
+            } else {
+                structId.setSym(sym);
+            }
+        }
+
+        if (symTable.lookupLocal(name) != null) {
+            ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(), "Multiply declared identifier");
+            boom = true;
+        }
+
+        if (!boom) {
+            try {
+                if (myType instanceof StructNode) {
+                    sym = new StructSym(structId);
+                } else {
+                    sym = new Sym(myType.toString());
+                }
+                symTable.addDecl(name, sym);
+                myId.setSym(sym);
+            } catch (DuplicateSymException ex) {
+                System.err.println("DuplicateSymException");
+                System.exit(-1);
+            } catch (EmptySymTableException ex) {
+                System.err.println("EmptySymTableException");
+                System.exit(-1);
+            } catch (WrongArgumentException ex) {
+                System.err.println("WrongArgumentException");
+                System.exit(-1);
+            }
+        }
+
+        return sym;
     }
 
     // 3 kids
@@ -320,6 +427,55 @@ class FnDeclNode extends DeclNode {
         p.println("}\n");
     }
 
+    public Sym analysis(SymTable symTable) throws EmptySymTableException, WrongArgumentException {
+        String name = myId.getStrVal();
+        FnSym sym = null;
+
+        if (symTable.lookupLocal(name) != null) {
+            ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(), "Multiply declared identifier");
+        }
+
+        else { // add function name to local symbol table
+            try {
+                sym = new FnSym(myType.toString(), myFormalsList.getTypeList());
+                symTable.addDecl(name, sym);
+                myId.setSym(sym);
+            } catch (DuplicateSymException ex) {
+                System.err.println("DuplicateSymException");
+                System.exit(-1);
+            } catch (EmptySymTableException ex) {
+                System.err.println("EmptySymTableException ");
+                System.exit(-1);
+            } catch (WrongArgumentException ex) {
+                System.err.println("WrongArgumentException");
+                System.exit(-1);
+            }
+        }
+
+        symTable.addScope(); // add a new scope for locals and params
+
+        // process the formals
+        List<String> typeList = myFormalsList.analysis(symTable);
+        if (sym != null) {
+            sym.addFormals(typeList);
+        }
+
+        myBody.analysis(symTable); // process the function body
+
+        try {
+            symTable.removeScope(); // exit scope
+        } catch (EmptySymTableException ex) {
+            System.err.println("EmptySymTableException");
+            System.exit(-1);
+        }
+
+        return null;
+    }
+
+    public IdNode getIdNode() {
+        return this.myId;
+    }
+
     // 4 kids
     private TypeNode myType;
     private IdNode myId;
@@ -337,6 +493,45 @@ class FormalDeclNode extends DeclNode {
         myType.unparse(p, 0);
         p.print(" ");
         myId.unparse(p, 0);
+    }
+
+    public Sym analysis(SymTable symTable) {
+        String name = myId.getStrVal();
+        boolean boom = false;
+        Sym sym = null;
+
+        if (myType instanceof VoidNode) {
+            ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(), "Non-function declared void");
+            boom = true;
+        }
+
+        if (symTable.lookupLocal(name) != null) {
+            ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(), "Multiply declared identifier");
+            boom = true;
+        }
+
+        if (!boom) { // insert into symbol table
+            try {
+                sym = new Sym(myType.toString());
+                symTable.addDecl(name, sym);
+                myId.setSym(sym);
+            } catch (DuplicateSymException ex) {
+                System.err.println("DuplicateSymException");
+                System.exit(-1);
+            } catch (EmptySymTableException ex) {
+                System.err.println("EmptySymTableException ");
+                System.exit(-1);
+            } catch (WrongArgumentException ex) {
+                System.err.println("WrongArgumentException ");
+                System.exit(-1);
+            }
+        }
+
+        return sym;
+    }
+
+    public String getTypeString() {
+        return myType.toString();
     }
 
     // 2 kids
@@ -359,6 +554,40 @@ class StructDeclNode extends DeclNode {
         addIndent(p, indent);
         p.println("};\n");
 
+    }
+
+    public Sym analysis(SymTable symTable) throws EmptySymTableException, WrongArgumentException {
+        String name = myId.getStrVal();
+        boolean boom = false;
+
+        if (symTable.lookupLocal(name) != null) {
+            ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(), "Multiply declared identifier");
+            boom = true;
+        }
+
+        SymTable structSymTab = new SymTable();
+
+        // process the fields of the struct
+        myDeclList.analysis(structSymTab, symTable);
+
+        if (!boom) {
+            try { // add entry to symbol table
+                StructDefSym sym = new StructDefSym(structSymTab);
+                symTable.addDecl(name, sym);
+                myId.setSym(sym);
+            } catch (DuplicateSymException ex) {
+                System.err.println("DuplicateSymException");
+                System.exit(-1);
+            } catch (EmptySymTableException ex) {
+                System.err.println("EmptySymTableException");
+                System.exit(-1);
+            } catch (WrongArgumentException ex) {
+                System.err.println("WrongArgumentException");
+                System.exit(-1);
+            }
+        }
+
+        return null;
     }
 
     // 2 kids
@@ -423,6 +652,10 @@ class VoidNode extends TypeNode {
 class StructNode extends TypeNode {
     public StructNode(IdNode id) {
         myId = id;
+    }
+
+    public IdNode getIdNode() {
+        return myId;
     }
 
     public void unparse(PrintWriter p, int indent) {
@@ -575,6 +808,21 @@ class IfStmtNode extends StmtNode {
     private ExpNode myExp;
     private DeclListNode myDeclList;
     private StmtListNode myStmtList;
+
+    @Override
+    public void analysis(SymTable symTable) throws EmptySymTableException, WrongArgumentException {
+        myExp.analysis(symTable);
+        symTable.addScope();
+        myDeclList.analysis(symTable);
+        myStmtList.analysis(symTable);
+        try {
+            symTable.removeScope();
+        } catch (EmptySymTableException ex) {
+            System.err.println("Unexpected EmptySymTableException  in IfStmtNode.analysis");
+            System.exit(-1);
+        }
+
+    }
 }
 
 class IfElseStmtNode extends StmtNode {
@@ -610,6 +858,30 @@ class IfElseStmtNode extends StmtNode {
     private StmtListNode myThenStmtList;
     private StmtListNode myElseStmtList;
     private DeclListNode myElseDeclList;
+
+    @Override
+    public void analysis(SymTable symTable) throws EmptySymTableException, WrongArgumentException {
+        myExp.analysis(symTable);
+        symTable.addScope();
+        myThenDeclList.analysis(symTable);
+        myThenStmtList.analysis(symTable);
+        try {
+            symTable.removeScope();
+        } catch (EmptySymTableException ex) {
+            System.err.println("Unexpected EmptySymTableException  in IfStmtNode.analysis");
+            System.exit(-1);
+        }
+        symTable.addScope();
+        myElseDeclList.analysis(symTable);
+        myElseStmtList.analysis(symTable);
+        try {
+            symTable.removeScope();
+        } catch (EmptySymTableException ex) {
+            System.err.println("Unexpected EmptySymTableException  in IfStmtNode.analysis");
+            System.exit(-1);
+        }
+
+    }
 }
 
 class WhileStmtNode extends StmtNode {
@@ -634,6 +906,20 @@ class WhileStmtNode extends StmtNode {
     private ExpNode myExp;
     private DeclListNode myDeclList;
     private StmtListNode myStmtList;
+
+    @Override
+    public void analysis(SymTable symTable) throws EmptySymTableException, WrongArgumentException {
+        myExp.analysis(symTable);
+        symTable.addScope();
+        myDeclList.analysis(symTable);
+        myStmtList.analysis(symTable);
+        try {
+            symTable.removeScope();
+        } catch (EmptySymTableException ex) {
+            System.err.println("Unexpected EmptySymTableException  in IfStmtNode.analysis");
+            System.exit(-1);
+        }
+    }
 }
 
 class RepeatStmtNode extends StmtNode {
@@ -658,6 +944,21 @@ class RepeatStmtNode extends StmtNode {
     private ExpNode myExp;
     private DeclListNode myDeclList;
     private StmtListNode myStmtList;
+
+    @Override
+    public void analysis(SymTable symTable) throws EmptySymTableException, WrongArgumentException {
+        myExp.analysis(symTable);
+        symTable.addScope();
+        myDeclList.analysis(symTable);
+        myStmtList.analysis(symTable);
+        try {
+            symTable.removeScope();
+        } catch (EmptySymTableException ex) {
+            System.err.println("Unexpected EmptySymTableException  in IfStmtNode.analysis");
+            System.exit(-1);
+        }
+
+    }
 }
 
 class CallStmtNode extends StmtNode {
@@ -815,16 +1116,16 @@ class IdNode extends ExpNode { // the most important node here
         if (sym == null) {
             ErrMsg.fatal(myLineNum, myCharNum, "Undeclared identifier");
         } else {
-            linkSym(sym);
+            setSym(sym);
         }
+    }
+
+    public void setSym(Sym sym) {
+        mySym = sym;
     }
 
     public Sym getSym() {
         return mySym;
-    }
-
-    public void linkSym(Sym mySym) {
-        this.mySym = mySym;
     }
 
     public int getLineNum() {
@@ -833,6 +1134,10 @@ class IdNode extends ExpNode { // the most important node here
 
     public int getCharNum() {
         return myCharNum;
+    }
+
+    public String getStrVal() {
+        return myStrVal;
     }
 
     @Override
@@ -865,19 +1170,7 @@ class DotAccessExpNode extends ExpNode {
      */
     @Override
     public void analysis(SymTable symTable) throws EmptySymTableException {
-        myLoc.analysis(symTable);
-        StructDeclNode lhs = this.getLHSStruct(symTable);
-        if (lhs == null) {
-            return;
-        }
-        SymTable leftTable = lhs.getSymTable();
-        // leftTable.print();
-        Sym foundItem = leftTable.lookupGlobal(myId.toString());
-        if (foundItem == null) {
-            ErrMsg.fatal(((IdNode) myId).getLineNum(), ((IdNode) myId).getCharNum(), "Invalid struct field name");
-        } else {
-            myId.setSym(foundItem);
-        }
+
     }
 
     // 2 kids

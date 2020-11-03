@@ -50,8 +50,18 @@ public class P4 {
         }
 
         // ADD NAME ANALYSIS PART HERE
-        SymTable mysym = new SymTable();
-        ((ProgramNode) root.value).analysis(mysym);
+        try {
+            ((ProgramNode) root.value).analysis();
+        } catch (EmptySymTableException e) {
+            System.err.println("EmptySymTableException");
+            System.exit(-1);
+        } catch (WrongArgumentException e) {
+            System.err.println("EmptySymTableException");
+            System.exit(-1);
+        } catch (Exception e) {
+            System.err.println("EmptySymTableException");
+            System.exit(-1);
+        }
         if (!ErrMsg.isfatal)
             ((ASTnode) root.value).unparse(outFile, 0);
         outFile.close();

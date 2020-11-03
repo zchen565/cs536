@@ -4,7 +4,7 @@
  * This class is used to generate warning and fatal error messages.
  */
 class ErrMsg {
-    static boolean isfatal = false
+    static boolean isfatal = false;
 
     /**
      * Generates a fatal error message.
