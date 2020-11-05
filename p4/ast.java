@@ -129,6 +129,7 @@ class ProgramNode extends ASTnode {
     }
 
     public void unparse(PrintWriter p, int indent) {
+
         myDeclList.unparse(p, indent);
     }
 
@@ -196,12 +197,14 @@ class DeclListNode extends ASTnode {
 }
 
 class FormalsListNode extends ASTnode {
+
     public FormalsListNode(List<FormalDeclNode> S) {
         myFormals = S;
     }
 
     public void unparse(PrintWriter p, int indent) {
         Iterator<FormalDeclNode> it = myFormals.iterator();
+
         if (it.hasNext()) { // if there is at least one element
             it.next().unparse(p, indent);
             while (it.hasNext()) { // print the rest of the list
@@ -258,6 +261,7 @@ class FnBodyNode extends ASTnode {
     }
 
     public void unparse(PrintWriter p, int indent) {
+
         myDeclList.unparse(p, indent);
         myStmtList.unparse(p, indent);
     }
@@ -337,8 +341,10 @@ class VarDeclNode extends DeclNode {
 
     public void unparse(PrintWriter p, int indent) {
         addIndent(p, indent);
+
         myType.unparse(p, 0);
         p.print(" ");
+
         myId.unparse(p, 0);
         p.println(";");
     }
@@ -371,7 +377,7 @@ class VarDeclNode extends DeclNode {
         }
 
         if (symTable.lookupLocal(name) != null) {
-            ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(), "Multiply declared identifier");
+            ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(), " Multiply declared identifier");
             boom = true;
         }
 
@@ -383,7 +389,6 @@ class VarDeclNode extends DeclNode {
                     sym = new Sym(myType.toString());
                 }
                 symTable.addDecl(name, sym);
-                myId.setSym(sym);
             } catch (DuplicateSymException ex) {
                 System.err.println("DuplicateSymException");
                 System.exit(-1);
@@ -432,14 +437,13 @@ class FnDeclNode extends DeclNode {
         FnSym sym = null;
 
         if (symTable.lookupLocal(name) != null) {
-            ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(), "Multiply declared identifier");
+            ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(), " Multiply declared identifier");
         }
 
         else { // add function name to local symbol table
             try {
                 sym = new FnSym(myType.toString(), myFormalsList.getTypeList());
                 symTable.addDecl(name, sym);
-                myId.setSym(sym);
             } catch (DuplicateSymException ex) {
                 System.err.println("DuplicateSymException");
                 System.exit(-1);
@@ -490,6 +494,7 @@ class FormalDeclNode extends DeclNode {
     }
 
     public void unparse(PrintWriter p, int indent) {
+
         myType.unparse(p, 0);
         p.print(" ");
         myId.unparse(p, 0);
@@ -509,12 +514,12 @@ class FormalDeclNode extends DeclNode {
             ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(), "Multiply declared identifier");
             boom = true;
         }
-
+        symTable.addScope();
         if (!boom) { // insert into symbol table
             try {
                 sym = new Sym(myType.toString());
                 symTable.addDecl(name, sym);
-                myId.setSym(sym);
+                symTable.removeScope();
             } catch (DuplicateSymException ex) {
                 System.err.println("DuplicateSymException");
                 System.exit(-1);
@@ -547,6 +552,7 @@ class StructDeclNode extends DeclNode {
 
     public void unparse(PrintWriter p, int indent) {
         addIndent(p, indent);
+
         p.print("struct ");
         myId.unparse(p, 0);
         p.println("{");
@@ -561,7 +567,7 @@ class StructDeclNode extends DeclNode {
         boolean boom = false;
 
         if (symTable.lookupLocal(name) != null) {
-            ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(), "Multiply declared identifier");
+            ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(), " Multiply declared identifier");
             boom = true;
         }
 
@@ -574,7 +580,6 @@ class StructDeclNode extends DeclNode {
             try { // add entry to symbol table
                 StructDefSym sym = new StructDefSym(structSymTab);
                 symTable.addDecl(name, sym);
-                myId.setSym(sym);
             } catch (DuplicateSymException ex) {
                 System.err.println("DuplicateSymException");
                 System.exit(-1);
@@ -691,6 +696,7 @@ class AssignStmtNode extends StmtNode {
 
     public void unparse(PrintWriter p, int indent) {
         addIndent(p, indent);
+
         myAssign.unparse(p, -1); // no parentheses
         p.println(";");
     }
@@ -1025,6 +1031,7 @@ class IntLitNode extends ExpNode {
     }
 
     public void unparse(PrintWriter p, int indent) {
+
         p.print(myIntVal);
     }
 
@@ -1046,6 +1053,7 @@ class StringLitNode extends ExpNode {
     }
 
     public void unparse(PrintWriter p, int indent) {
+
         p.print(myStrVal);
     }
 
@@ -1105,6 +1113,7 @@ class IdNode extends ExpNode { // the most important node here
     }
 
     public void unparse(PrintWriter p, int indent) {
+
         p.print(myStrVal);
         if (mySym != null) //
             p.print("(" + mySym.toString() + ")");
@@ -1148,34 +1157,139 @@ class IdNode extends ExpNode { // the most important node here
     private int myLineNum;
     private int myCharNum;
     private String myStrVal;
-
     private Sym mySym;
+    private StructDeclNode myStruct;
+
 }
 
 class DotAccessExpNode extends ExpNode {
     public DotAccessExpNode(ExpNode loc, IdNode id) {
         myLoc = loc;
         myId = id;
-    }
-
-    public void unparse(PrintWriter p, int indent) {
-        p.print("(");
-        myLoc.unparse(p, 0);
-        p.print(").");
-        myId.unparse(p, 0);
+        mySym = null;
     }
 
     /**
-     * attention for the structDeclNode
+     * Return the symbol associated with this dot-access node.
      */
-    @Override
-    public void analysis(SymTable symTable) throws EmptySymTableException {
+    public Sym sym() {
+        return mySym;
+    }
 
+    /**
+     * Return the line number for this dot-access node. The line number is the one
+     * corresponding to the RHS of the dot-access.
+     */
+    public int lineNum() {
+        return myId.getLineNum();
+    }
+
+    /**
+     * Return the char number for this dot-access node. The char number is the one
+     * corresponding to the RHS of the dot-access.
+     */
+    public int charNum() {
+        return myId.getCharNum();
+    }
+
+    /**
+     * nameAnalysis Given a symbol table symTab, do: - process the LHS of the
+     * dot-access - process the RHS of the dot-access - if the RHS is of a struct
+     * type, set the sym for this node so that a dot-access "higher up" in the AST
+     * can get access to the symbol table for the appropriate struct definition
+     */
+    public void analysis(SymTable symTab) {
+        boom = false;
+        SymTable structSymTab = null; // to lookup RHS of dot-access
+        Sym sym = null;
+
+        try {
+            myLoc.analysis(symTab); // do name analysis on LHS
+        } catch (Exception e) {
+
+        }
+        // if myLoc is really an ID, then sym will be a link to the ID's symbol
+        if (myLoc instanceof IdNode) {
+            IdNode id = (IdNode) myLoc;
+            sym = id.getSym();
+
+            // check ID has been declared to be of a struct type
+
+            if (sym == null) { // ID was undeclared
+                boom = true;
+            } else if (sym instanceof StructSym) {
+                // get symbol table for struct type
+                Sym tempSym = ((StructSym) sym).getStructType().getSym();
+                structSymTab = ((StructDefSym) tempSym).getSymTable();
+            } else { // LHS is not a struct type
+                ErrMsg.fatal(id.getLineNum(), id.getCharNum(), "Dot-access of non-struct type");
+                boom = true;
+            }
+        }
+
+        // if myLoc is really a dot-access (i.e., myLoc was of the form
+        // LHSloc.RHSid), then sym will either be
+        // null - indicating RHSid is not of a struct type, or
+        // a link to the Sym for the struct type RHSid was declared to be
+        else if (myLoc instanceof DotAccessExpNode) {
+            DotAccessExpNode loc = (DotAccessExpNode) myLoc;
+
+            if (loc.boom) { // if errors in processing myLoc
+                boom = true; // don't continue proccessing this dot-access
+            } else { // no errors in processing myLoc
+                sym = loc.sym();
+
+                if (sym == null) { // no struct in which to look up RHS
+                    ErrMsg.fatal(loc.lineNum(), loc.charNum(), "Dot-access of non-struct type");
+                    boom = true;
+                } else { // get the struct's symbol table in which to lookup RHS
+                    if (sym instanceof StructDefSym) {
+                        structSymTab = ((StructDefSym) sym).getSymTable();
+                    } else {
+                        System.err.println("Unexpected Sym type in DotAccessExpNode");
+
+                    }
+                }
+            }
+
+        }
+
+        else { // don't know what kind of thing myLoc is
+            System.err.println("Unexpected node type in LHS of dot-access");
+
+        }
+
+        // do name analysis on RHS of dot-access in the struct's symbol table
+        if (!boom) {
+
+            sym = structSymTab.lookupGlobal(myId.getStrVal()); // lookup
+            if (sym == null) { // not found - RHS is not a valid field name
+                ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(), "Invalid struct field name");
+                boom = true;
+            }
+
+            else {
+                // if RHS is itself as struct type, link the symbol for its struct
+                // type to this dot-access node (to allow chained dot-access)
+                if (sym instanceof StructSym) {
+                    mySym = ((StructSym) sym).getStructType().getSym();
+                }
+            }
+        }
+    }
+
+    public void unparse(PrintWriter p, int indent) {
+        myLoc.unparse(p, 0);
+        p.print(".");
+        myId.unparse(p, 0);
     }
 
     // 2 kids
     private ExpNode myLoc;
     private IdNode myId;
+    private Sym mySym;
+    private boolean boom;
+
 }
 
 class AssignNode extends ExpNode {
@@ -1267,7 +1381,6 @@ abstract class BinaryExpNode extends ExpNode {
     protected ExpNode myExp1;
     protected ExpNode myExp2;
 }
-
 // **********************************************************************
 // <<<Subclasses of UnaryExpNode>>>
 // **********************************************************************

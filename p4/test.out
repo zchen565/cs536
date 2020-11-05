@@ -1,8 +1,56 @@
-struct Point(struct){
-    int x(int);
-    int y(int);
+struct Point{
+    int x;
+    int y;
 };
 
-int f(int, bool -> int)(int x(int), bool b(bool)) {
+int f(int x, bool b) {
+}
+
+void g() {
+    int a;
+    bool b;
+    struct Point(struct) p;
+    p(Point).x = a(int);
+    b(bool) = (a(int) == 3);
+    f(int, bool -> int)((a(int) + (p(Point).y * 2)), b(bool));
+    g(void -> void)();
+}
+
+int h(int h) {
+    int h;
+    h(int) = 5;
+    while ((5 == 3)) {
+    }
+    repeat ((h(int) == 3)) {
+    }
+}
+
+int main() {
+    int a;
+    if ((a(int) == 1)) {
+        int a;
+        if ((a(int) == 1)) {
+            int a;
+            int c;
+            a(int) = 4;
+        }
+        else {
+            int a;
+            int b;
+            a(int) = a(int);
+        }
+    }
+    while ((a(int) == 1)) {
+        int b;
+        while ((b(int) < a(int))) {
+            int a;
+            int c;
+            a(int) = 1;
+            while ((c(int) == 1)) {
+                cout << a(int);
+            }
+        }
+    }
+    cout << a(int);
 }
 
