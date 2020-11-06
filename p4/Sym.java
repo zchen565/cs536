@@ -29,7 +29,7 @@ class StructDefSym extends Sym {
     private SymTable symTab;
 
     public StructDefSym(SymTable table) {
-        super("struct");
+        super("");
         symTab = table;
     }
 
@@ -73,10 +73,8 @@ class FnSym extends Sym {
     }
 
     public String toString() {
-        String params = String.join(", ", paraType);
-        if (params.equals("")) {
-            params = "void";
-        }
-        return params + " -> " + reType;
+        String params = String.join(",", paraType);
+
+        return params + "->" + reType;
     }
 }

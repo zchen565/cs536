@@ -3,17 +3,17 @@ struct Point{
     int y;
 };
 
-int f(int x, bool b) {
+int f(int x, int x) {
 }
 
 void g() {
     int a;
     bool b;
-    struct Point(struct) p;
+    struct Point() p;
     p(Point).x = a(int);
     b(bool) = (a(int) == 3);
-    f(int, bool -> int)((a(int) + (p(Point).y * 2)), b(bool));
-    g(void -> void)();
+    f(int,int->int)((a(int) + (p(Point).y * 2)), a(int));
+    g(->void)();
 }
 
 int h(int h) {

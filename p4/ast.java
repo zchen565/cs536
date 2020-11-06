@@ -232,9 +232,13 @@ class FormalsListNode extends ASTnode {
      * @throws WrongArgumentException
      */
     public List<String> analysis(SymTable symTable) throws EmptySymTableException, WrongArgumentException {
+
         List<String> typeList = new LinkedList<String>();
+        if (myFormals == null)
+            return typeList;
         for (FormalDeclNode node : myFormals) {
             Sym sym = node.analysis(symTable);
+
             if (sym != null) {
                 typeList.add(sym.getType());
             }
@@ -504,7 +508,6 @@ class FormalDeclNode extends DeclNode {
         String name = myId.getStrVal();
         boolean boom = false;
         Sym sym = null;
-
         if (myType instanceof VoidNode) {
             ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(), "Non-function declared void");
             boom = true;
