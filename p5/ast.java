@@ -868,6 +868,9 @@ class ReadStmtNode extends StmtNode {
     @Override
     public void typeCheck(Type expectedType) {
         Type temp = myExp.typeCheck();
+        if (temp.isErrorType()) {
+            return;
+        }
         if (temp.isFnType())
             ErrMsg.fatal(myExp.lineNum(), myExp.lineChar(), "Attempt to read a function");
         else if (temp.isStructDefType())
@@ -903,6 +906,9 @@ class WriteStmtNode extends StmtNode {
     @Override
     public void typeCheck(Type expectedType) {
         Type temp = myExp.typeCheck();
+        if (temp.isErrorType()) {
+            return;
+        }
         if (temp.isFnType())
             ErrMsg.fatal(myExp.lineNum(), myExp.lineChar(), "Attempt to write a function");
         else if (temp.isVoidType())
@@ -1182,15 +1188,34 @@ class ReturnStmtNode extends StmtNode {
 
     @Override
     public void typeCheck(Type expectedType) {
-        if (myExp != null) { // != null will return
-            Type temp = myExp.typeCheck();
-            if (expectedType.isVoidType())
-                ErrMsg.fatal(myExp.lineNum(), myExp.lineChar(), "Return with a value in a void function");
-            else if (!expectedType.equals(temp))
-                ErrMsg.fatal(myExp.lineNum(), myExp.lineChar(), "Bad return value");
-        } else if (!expectedType.isVoidType()) { // no return
-            ErrMsg.fatal(0, 0, "Missing return value");
+        // if (myExp != null) { // != null will return
+        // Type temp = myExp.typeCheck();
+        // if (expectedType.isVoidType())
+        // ErrMsg.fatal(myExp.lineNum(), myExp.lineChar(), "Return with a value in a
+        // void function");
+        // else if (!expectedType.equals(temp))
+        // ErrMsg.fatal(myExp.lineNum(), myExp.lineChar(), "Bad return value");
+        // } else if (!expectedType.isVoidType()) { // no return
+        // ErrMsg.fatal(0, 0, "Missing return value");
+        // }
+
+        Type temp = null;
+        if (myExp != null) {
+            temp = myExp.typeCheck();
         }
+        if (myExp == null && !expectedType.isVoidType()) {
+            ErrMsg.fatal(0, 0, "Missing return value");
+            return;
+        }
+        if (expectedType.isVoidType() && myExp != null) {
+            ErrMsg.fatal(myExp.lineNum(), myExp.lineChar(), "Return with a value in a void function");
+            return;
+        }
+        if (!expectedType.isVoidType() && temp != null && !temp.equals(expectedType)) {
+            ErrMsg.fatal(myExp.lineNum(), myExp.lineChar(), "Bad return value");
+            return;
+        }
+        return;
     }
 
     public void unparse(PrintWriter p, int indent) {
