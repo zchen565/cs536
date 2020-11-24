@@ -1,0 +1,7 @@
+int i;
+bool b;
+struct S{
+    int x;
+    int y;
+};
+

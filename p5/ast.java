@@ -1180,9 +1180,8 @@ class ReturnStmtNode extends StmtNode {
     public void typeCheck(Type expectedType) {
         if (myExp != null) { // != null will return
             Type temp = myExp.typeCheck();
-            System.out.println(temp.lineNum);
             if (expectedType.isVoidType())
-                ErrMsg.fatal(temp.lineNum, temp.lineChar, "1190Return with a value in a void function");
+                ErrMsg.fatal(temp.lineNum, temp.lineChar, "Return with a value in a void function");
             else if (!expectedType.equals(temp))
                 ErrMsg.fatal(temp.lineNum, temp.lineChar, "Bad return value");
         } else if (!expectedType.isVoidType()) { // no return
@@ -1776,7 +1775,7 @@ class PlusNode extends BinaryExpNode {
         Type leftType = myExp1.typeCheck();
         Type rightType = myExp2.typeCheck();
         if (leftType.isErrorType() || rightType.isErrorType()) {
-            return new ErrorType();
+            return new ErrorType(leftType.lineNum, leftType.lineChar);
         }
         if (!leftType.isIntType()) {
             ErrMsg.fatal(leftType.lineNum, leftType.lineChar, "Arithmetic operator applied to non-numeric operand");
@@ -1787,9 +1786,9 @@ class PlusNode extends BinaryExpNode {
             err = true;
         }
         if (err) {
-            return new ErrorType();
+            return new ErrorType(leftType.lineNum, leftType.lineChar);
         }
-        return new IntType();
+        return new IntType(leftType.lineNum, leftType.lineChar);
     }
 }
 
@@ -1812,7 +1811,7 @@ class MinusNode extends BinaryExpNode {
         Type leftType = myExp1.typeCheck();
         Type rightType = myExp2.typeCheck();
         if (leftType.isErrorType() || rightType.isErrorType()) {
-            return new ErrorType();
+            return new ErrorType(leftType.lineNum, leftType.lineChar);
         }
         if (!leftType.isIntType()) {
             ErrMsg.fatal(leftType.lineNum, leftType.lineChar, "Arithmetic operator applied to non-numeric operand");
@@ -1823,9 +1822,9 @@ class MinusNode extends BinaryExpNode {
             err = true;
         }
         if (err) {
-            return new ErrorType();
+            return new ErrorType(leftType.lineNum, leftType.lineChar);
         }
-        return new IntType();
+        return new IntType(leftType.lineNum, leftType.lineChar);
     }
 }
 
@@ -1848,7 +1847,7 @@ class TimesNode extends BinaryExpNode {
         Type leftType = myExp1.typeCheck();
         Type rightType = myExp2.typeCheck();
         if (leftType.isErrorType() || rightType.isErrorType()) {
-            return new ErrorType();
+            return new ErrorType(leftType.lineNum, leftType.lineChar);
         }
         if (!leftType.isIntType()) {
             ErrMsg.fatal(leftType.lineNum, leftType.lineChar, "Arithmetic operator applied to non-numeric operand");
@@ -1859,9 +1858,9 @@ class TimesNode extends BinaryExpNode {
             err = true;
         }
         if (err) {
-            return new ErrorType();
+            return new ErrorType(leftType.lineNum, leftType.lineChar);
         }
-        return new IntType();
+        return new IntType(leftType.lineNum, leftType.lineChar);
     }
 }
 
@@ -1884,7 +1883,7 @@ class DivideNode extends BinaryExpNode {
         Type leftType = myExp1.typeCheck();
         Type rightType = myExp2.typeCheck();
         if (leftType.isErrorType() || rightType.isErrorType()) {
-            return new ErrorType();
+            return new ErrorType(leftType.lineNum, leftType.lineChar);
         }
         if (!leftType.isIntType()) {
             ErrMsg.fatal(leftType.lineNum, leftType.lineChar, "Arithmetic operator applied to non-numeric operand");
@@ -1895,9 +1894,9 @@ class DivideNode extends BinaryExpNode {
             err = true;
         }
         if (err) {
-            return new ErrorType();
+            return new ErrorType(leftType.lineNum, leftType.lineChar);
         }
-        return new IntType();
+        return new IntType(leftType.lineNum, leftType.lineChar);
     }
 }
 
@@ -1920,7 +1919,7 @@ class AndNode extends BinaryExpNode {
         Type rightType = myExp2.typeCheck();
         boolean errFlag = false;
         if (leftType.isErrorType() || rightType.isErrorType()) {
-            return new ErrorType();
+            return new ErrorType(leftType.lineNum, leftType.lineChar);
         }
         if (!leftType.isBoolType()) {
             ErrMsg.fatal(leftType.lineNum, rightType.lineChar, "Logical operator applied to non-bool operand");
@@ -1931,9 +1930,9 @@ class AndNode extends BinaryExpNode {
             errFlag = true;
         }
         if (errFlag) {
-            return new ErrorType();
+            return new ErrorType(leftType.lineNum, leftType.lineChar);
         }
-        return new BoolType();
+        return new BoolType(leftType.lineNum, leftType.lineChar);
     }
 }
 
@@ -1956,7 +1955,7 @@ class OrNode extends BinaryExpNode {
         Type rightType = myExp2.typeCheck();
         boolean errFlag = false;
         if (leftType.isErrorType() || rightType.isErrorType()) {
-            return new ErrorType();
+            return new ErrorType(leftType.lineNum, leftType.lineChar);
         }
         if (!leftType.isBoolType()) {
             ErrMsg.fatal(leftType.lineNum, leftType.lineChar, "Logical operator applied to non-bool operand");
@@ -1967,9 +1966,9 @@ class OrNode extends BinaryExpNode {
             errFlag = true;
         }
         if (errFlag) {
-            return new ErrorType();
+            return new ErrorType(leftType.lineNum, leftType.lineChar);
         }
-        return new BoolType();
+        return new BoolType(leftType.lineNum, leftType.lineChar);
     }
 }
 
@@ -1991,29 +1990,29 @@ class EqualsNode extends BinaryExpNode {
         Type leftType = myExp1.typeCheck();
         Type rightType = myExp2.typeCheck();
         if (leftType.isErrorType() || rightType.isErrorType()) {
-            return new ErrorType();
+            return new ErrorType(leftType.lineNum, leftType.lineChar);
         }
         if (!leftType.equals(rightType)) {
             ErrMsg.fatal(leftType.lineNum, leftType.lineChar, "Type mismatch");
-            return new ErrorType();
+            return new ErrorType(leftType.lineNum, leftType.lineChar);
         }
         if (leftType.isVoidType()) {
             ErrMsg.fatal(leftType.lineNum, leftType.lineChar, "Equality operator applied to void functions");
-            return new ErrorType();
+            return new ErrorType(leftType.lineNum, leftType.lineChar);
         }
         if (leftType.isFnType()) {
             ErrMsg.fatal(leftType.lineNum, leftType.lineChar, "Equality operator applied to functions");
-            return new ErrorType();
+            return new ErrorType(leftType.lineNum, leftType.lineChar);
         }
         if (leftType.isStructType()) {
             ErrMsg.fatal(leftType.lineNum, leftType.lineChar, "Equality operator applied to struct names");
-            return new ErrorType();
+            return new ErrorType(leftType.lineNum, leftType.lineChar);
         }
         if (leftType.isStructDefType()) {
             ErrMsg.fatal(leftType.lineNum, leftType.lineChar, "Equality operator applied to struct variables");
-            return new ErrorType();
+            return new ErrorType(leftType.lineNum, leftType.lineChar);
         }
-        return new BoolType();
+        return new BoolType(leftType.lineNum, leftType.lineChar);
     }
 }
 
@@ -2035,29 +2034,29 @@ class NotEqualsNode extends BinaryExpNode {
         Type leftType = myExp1.typeCheck();
         Type rightType = myExp2.typeCheck();
         if (leftType.isErrorType() || rightType.isErrorType()) {
-            return new ErrorType();
+            return new ErrorType(leftType.lineNum, leftType.lineChar);
         }
         if (!leftType.equals(rightType)) {
             ErrMsg.fatal(leftType.lineNum, leftType.lineChar, "Type mismatch");
-            return new ErrorType();
+            return new ErrorType(leftType.lineNum, leftType.lineChar);
         }
         if (leftType.isVoidType()) {
             ErrMsg.fatal(leftType.lineNum, leftType.lineChar, "Equality operator applied to void functions");
-            return new ErrorType();
+            return new ErrorType(leftType.lineNum, leftType.lineChar);
         }
         if (leftType.isFnType()) {
             ErrMsg.fatal(leftType.lineNum, leftType.lineChar, "Equality operator applied to functions");
-            return new ErrorType();
+            return new ErrorType(leftType.lineNum, leftType.lineChar);
         }
         if (leftType.isStructType()) {
             ErrMsg.fatal(leftType.lineNum, leftType.lineChar, "Equality operator applied to struct names");
-            return new ErrorType();
+            return new ErrorType(leftType.lineNum, leftType.lineChar);
         }
         if (leftType.isStructDefType()) {
             ErrMsg.fatal(leftType.lineNum, leftType.lineChar, "Equality operator applied to struct variables");
-            return new ErrorType();
+            return new ErrorType(leftType.lineNum, leftType.lineChar);
         }
-        return new BoolType();
+        return new BoolType(leftType.lineNum, leftType.lineChar);
     }
 }
 
@@ -2088,9 +2087,9 @@ class LessNode extends BinaryExpNode {
             errFlag = true;
         }
         if (errFlag) {
-            return new ErrorType();
+            return new ErrorType(leftType.lineNum, leftType.lineChar);
         }
-        return new BoolType();
+        return new BoolType(leftType.lineNum, leftType.lineChar);
     }
 }
 
@@ -2121,9 +2120,9 @@ class GreaterNode extends BinaryExpNode {
             errFlag = true;
         }
         if (errFlag) {
-            return new ErrorType();
+            return new ErrorType(leftType.lineNum, leftType.lineChar);
         }
-        return new BoolType();
+        return new BoolType(leftType.lineNum, leftType.lineChar);
     }
 }
 
@@ -2154,9 +2153,9 @@ class LessEqNode extends BinaryExpNode {
             errFlag = true;
         }
         if (errFlag) {
-            return new ErrorType();
+            return new ErrorType(leftType.lineNum, leftType.lineChar);
         }
-        return new BoolType();
+        return new BoolType(leftType.lineNum, leftType.lineChar);
     }
 }
 
@@ -2187,8 +2186,8 @@ class GreaterEqNode extends BinaryExpNode {
             errFlag = true;
         }
         if (errFlag) {
-            return new ErrorType();
+            return new ErrorType(leftType.lineNum, leftType.lineChar);
         }
-        return new BoolType();
+        return new BoolType(leftType.lineNum, leftType.lineChar);
     }
 }
