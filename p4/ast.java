@@ -232,16 +232,19 @@ class FormalsListNode extends ASTnode {
      * @throws WrongArgumentException
      */
     public List<String> analysis(SymTable symTable) throws EmptySymTableException, WrongArgumentException {
-
         List<String> typeList = new LinkedList<String>();
-        if (myFormals == null)
-            return typeList;
+        symTable.addScope(); 
         for (FormalDeclNode node : myFormals) {
             Sym sym = node.analysis(symTable);
-
             if (sym != null) {
                 typeList.add(sym.getType());
             }
+        }
+        try {
+            symTable.removeScope();
+        }
+        catch(Exception e) {
+            
         }
         return typeList;
     }
@@ -508,6 +511,7 @@ class FormalDeclNode extends DeclNode {
         String name = myId.getStrVal();
         boolean boom = false;
         Sym sym = null;
+
         if (myType instanceof VoidNode) {
             ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(), "Non-function declared void");
             boom = true;
@@ -517,12 +521,12 @@ class FormalDeclNode extends DeclNode {
             ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(), "Multiply declared identifier");
             boom = true;
         }
-        symTable.addScope();
+        
         if (!boom) { // insert into symbol table
             try {
+                
                 sym = new Sym(myType.toString());
                 symTable.addDecl(name, sym);
-                symTable.removeScope();
             } catch (DuplicateSymException ex) {
                 System.err.println("DuplicateSymException");
                 System.exit(-1);
@@ -1172,80 +1176,80 @@ class DotAccessExpNode extends ExpNode {
         mySym = null;
     }
 
-    /**
-     * Return the symbol associated with this dot-access node.
-     */
     public Sym sym() {
         return mySym;
     }
 
-    /**
-     * Return the line number for this dot-access node. The line number is the one
-     * corresponding to the RHS of the dot-access.
-     */
+
     public int lineNum() {
         return myId.getLineNum();
     }
 
-    /**
-     * Return the char number for this dot-access node. The char number is the one
-     * corresponding to the RHS of the dot-access.
-     */
+ 
     public int charNum() {
         return myId.getCharNum();
     }
 
-    /**
-     * nameAnalysis Given a symbol table symTab, do: - process the LHS of the
-     * dot-access - process the RHS of the dot-access - if the RHS is of a struct
-     * type, set the sym for this node so that a dot-access "higher up" in the AST
-     * can get access to the symbol table for the appropriate struct definition
-     */
     public void analysis(SymTable symTab) {
         boom = false;
-        SymTable structSymTab = null; // to lookup RHS of dot-access
+        SymTable structSymTab = null; 
         Sym sym = null;
-
+        
+           
+        
         try {
-            myLoc.analysis(symTab); // do name analysis on LHS
+            myLoc.analysis(symTab);
         } catch (Exception e) {
+                    boom = true;
 
         }
-        // if myLoc is really an ID, then sym will be a link to the ID's symbol
+        // check node
         if (myLoc instanceof IdNode) {
             IdNode id = (IdNode) myLoc;
             sym = id.getSym();
-
-            // check ID has been declared to be of a struct type
-
-            if (sym == null) { // ID was undeclared
+            if (sym == null) { 
                 boom = true;
-            } else if (sym instanceof StructSym) {
-                // get symbol table for struct type
+            } 
+            // check struck
+            else if (sym instanceof StructSym) {
+               
                 Sym tempSym = ((StructSym) sym).getStructType().getSym();
+                
                 structSymTab = ((StructDefSym) tempSym).getSymTable();
-            } else { // LHS is not a struct type
+                
+                sym = structSymTab.lookupGlobal(myId.getStrVal()); 
+                myId.setSym(sym);
+            if (sym == null) {  // if struck is null
+                ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(), "Invalid struct field name");
+                boom = true;
+            }
+
+            else {
+                
+                if (sym instanceof StructSym) {
+                    mySym = ((StructSym) sym).getStructType().getSym();
+                }
+            }
+            } else { 
                 ErrMsg.fatal(id.getLineNum(), id.getCharNum(), "Dot-access of non-struct type");
                 boom = true;
             }
         }
 
-        // if myLoc is really a dot-access (i.e., myLoc was of the form
-        // LHSloc.RHSid), then sym will either be
-        // null - indicating RHSid is not of a struct type, or
-        // a link to the Sym for the struct type RHSid was declared to be
+        
         else if (myLoc instanceof DotAccessExpNode) {
             DotAccessExpNode loc = (DotAccessExpNode) myLoc;
 
-            if (loc.boom) { // if errors in processing myLoc
-                boom = true; // don't continue proccessing this dot-access
+            if (loc.boom) { // if errors happens return
+                ErrMsg.fatal(loc.lineNum(), loc.charNum(), "Dot-access of non-struct type");
+                boom = true;
+                return;
             } else { // no errors in processing myLoc
                 sym = loc.sym();
-
-                if (sym == null) { // no struct in which to look up RHS
+                if (sym == null) {  //sym null 
                     ErrMsg.fatal(loc.lineNum(), loc.charNum(), "Dot-access of non-struct type");
                     boom = true;
-                } else { // get the struct's symbol table in which to lookup RHS
+                } else { 
                     if (sym instanceof StructDefSym) {
                         structSymTab = ((StructDefSym) sym).getSymTable();
                     } else {
@@ -1257,28 +1261,11 @@ class DotAccessExpNode extends ExpNode {
 
         }
 
-        else { // don't know what kind of thing myLoc is
+        else { // unexpect type
             System.err.println("Unexpected node type in LHS of dot-access");
 
         }
-
-        // do name analysis on RHS of dot-access in the struct's symbol table
-        if (!boom) {
-
-            sym = structSymTab.lookupGlobal(myId.getStrVal()); // lookup
-            if (sym == null) { // not found - RHS is not a valid field name
-                ErrMsg.fatal(myId.getLineNum(), myId.getCharNum(), "Invalid struct field name");
-                boom = true;
-            }
-
-            else {
-                // if RHS is itself as struct type, link the symbol for its struct
-                // type to this dot-access node (to allow chained dot-access)
-                if (sym instanceof StructSym) {
-                    mySym = ((StructSym) sym).getStructType().getSym();
-                }
-            }
-        }
+        
     }
 
     public void unparse(PrintWriter p, int indent) {

@@ -404,7 +404,7 @@ class VarDeclNode extends DeclNode {
         IdNode structId = null;
 
         if (myType instanceof VoidNode) { // check for void type
-            ErrMsg.fatal(myId.lineNum(), myId.charNum(), "Non-function declared void");
+            ErrMsg.fatal(myId.lineNum(), myId.lineChar(), "Non-function declared void");
             badDecl = true;
         }
 
@@ -415,7 +415,7 @@ class VarDeclNode extends DeclNode {
             // if the name for the struct type is not found,
             // or is not a struct type
             if (sym == null || !(sym instanceof StructDefSym)) {
-                ErrMsg.fatal(structId.lineNum(), structId.charNum(), "Invalid name of struct type");
+                ErrMsg.fatal(structId.lineNum(), structId.lineChar(), "Invalid name of struct type");
                 badDecl = true;
             } else {
                 structId.link(sym);
@@ -423,7 +423,7 @@ class VarDeclNode extends DeclNode {
         }
 
         if (symTab.lookupLocal(name) != null) {
-            ErrMsg.fatal(myId.lineNum(), myId.charNum(), "Multiply declared identifier");
+            ErrMsg.fatal(myId.lineNum(), myId.lineChar(), "Multiply declared identifier");
             badDecl = true;
         }
 
@@ -487,7 +487,7 @@ class FnDeclNode extends DeclNode {
         FnSym sym = null;
 
         if (symTab.lookupLocal(name) != null) {
-            ErrMsg.fatal(myId.lineNum(), myId.charNum(), "Multiply declared identifier");
+            ErrMsg.fatal(myId.lineNum(), myId.lineChar(), "Multiply declared identifier");
         }
 
         else { // add function name to local symbol table
@@ -569,12 +569,12 @@ class FormalDeclNode extends DeclNode {
         Sym sym = null;
 
         if (myType instanceof VoidNode) {
-            ErrMsg.fatal(myId.lineNum(), myId.charNum(), "Non-function declared void");
+            ErrMsg.fatal(myId.lineNum(), myId.lineChar(), "Non-function declared void");
             badDecl = true;
         }
 
         if (symTab.lookupLocal(name) != null) {
-            ErrMsg.fatal(myId.lineNum(), myId.charNum(), "Multiply declared identifier");
+            ErrMsg.fatal(myId.lineNum(), myId.lineChar(), "Multiply declared identifier");
             badDecl = true;
         }
 
@@ -626,7 +626,7 @@ class StructDeclNode extends DeclNode {
         boolean badDecl = false;
 
         if (symTab.lookupLocal(name) != null) {
-            ErrMsg.fatal(myId.lineNum(), myId.charNum(), "Multiply declared identifier");
+            ErrMsg.fatal(myId.lineNum(), myId.lineChar(), "Multiply declared identifier");
             badDecl = true;
         }
 
@@ -1224,9 +1224,9 @@ abstract class ExpNode extends ASTnode {
 }
 
 class IntLitNode extends ExpNode {
-    public IntLitNode(int lineNum, int charNum, int intVal) {
+    public IntLitNode(int lineNum, int lineChar, int intVal) {
         myLineNum = lineNum;
-        myCharNum = charNum;
+        mylineChar = lineChar;
         myIntVal = intVal;
     }
 
@@ -1235,19 +1235,19 @@ class IntLitNode extends ExpNode {
     }
 
     private int myLineNum;
-    private int myCharNum;
+    private int mylineChar;
     private int myIntVal;
 
     @Override
     public Type typeCheck() {
-        return new IntType(myLineNum, myCharNum);
+        return new IntType(myLineNum, mylineChar);
     }
 }
 
 class StringLitNode extends ExpNode {
-    public StringLitNode(int lineNum, int charNum, String strVal) {
+    public StringLitNode(int lineNum, int lineChar, String strVal) {
         myLineNum = lineNum;
-        myCharNum = charNum;
+        mylineChar = lineChar;
         myStrVal = strVal;
     }
 
@@ -1256,19 +1256,19 @@ class StringLitNode extends ExpNode {
     }
 
     private int myLineNum;
-    private int myCharNum;
+    private int mylineChar;
     private String myStrVal;
 
     @Override
     public Type typeCheck() {
-        return new StringType(myLineNum, myCharNum);
+        return new StringType(myLineNum, mylineChar);
     }
 }
 
 class TrueNode extends ExpNode {
-    public TrueNode(int lineNum, int charNum) {
+    public TrueNode(int lineNum, int lineChar) {
         myLineNum = lineNum;
-        myCharNum = charNum;
+        mylineChar = lineChar;
     }
 
     public void unparse(PrintWriter p, int indent) {
@@ -1276,18 +1276,18 @@ class TrueNode extends ExpNode {
     }
 
     private int myLineNum;
-    private int myCharNum;
+    private int mylineChar;
 
     @Override
     public Type typeCheck() {
-        return new BoolType(myLineNum, myCharNum);
+        return new BoolType(myLineNum, mylineChar);
     }
 }
 
 class FalseNode extends ExpNode {
-    public FalseNode(int lineNum, int charNum) {
+    public FalseNode(int lineNum, int lineChar) {
         myLineNum = lineNum;
-        myCharNum = charNum;
+        mylineChar = lineChar;
     }
 
     public void unparse(PrintWriter p, int indent) {
@@ -1295,18 +1295,18 @@ class FalseNode extends ExpNode {
     }
 
     private int myLineNum;
-    private int myCharNum;
+    private int mylineChar;
 
     @Override
     public Type typeCheck() {
-        return new BoolType(myLineNum, myCharNum);
+        return new BoolType(myLineNum, mylineChar);
     }
 }
 
 class IdNode extends ExpNode {
-    public IdNode(int lineNum, int charNum, String strVal) {
+    public IdNode(int lineNum, int lineChar, String strVal) {
         myLineNum = lineNum;
-        myCharNum = charNum;
+        mylineChar = lineChar;
         myStrVal = strVal;
     }
 
@@ -1341,8 +1341,8 @@ class IdNode extends ExpNode {
     /**
      * Return the char number for this ID.
      */
-    public int charNum() {
-        return myCharNum;
+    public int lineChar() {
+        return mylineChar;
     }
 
     /**
@@ -1352,7 +1352,7 @@ class IdNode extends ExpNode {
     public void nameAnalysis(SymTable symTab) {
         Sym sym = symTab.lookupGlobal(myStrVal);
         if (sym == null) {
-            ErrMsg.fatal(myLineNum, myCharNum, "Undeclared identifier");
+            ErrMsg.fatal(myLineNum, mylineChar, "Undeclared identifier");
         } else {
             link(sym);
         }
@@ -1366,7 +1366,7 @@ class IdNode extends ExpNode {
     }
 
     private int myLineNum;
-    private int myCharNum;
+    private int mylineChar;
     private String myStrVal;
     private Sym mySym;
 
@@ -1374,7 +1374,7 @@ class IdNode extends ExpNode {
     public Type typeCheck() {
         Type t = mySym.getType().getType();
         t.lineNum = myLineNum;
-        t.lineChar = myCharNum;
+        t.lineChar = mylineChar;
         return t;
     }
 }
@@ -1405,8 +1405,8 @@ class DotAccessExpNode extends ExpNode {
      * Return the char number for this dot-access node. The char number is the one
      * corresponding to the RHS of the dot-access.
      */
-    public int charNum() {
-        return myId.charNum();
+    public int lineChar() {
+        return myId.lineChar();
     }
 
     /**
@@ -1436,7 +1436,7 @@ class DotAccessExpNode extends ExpNode {
                 Sym tempSym = ((StructSym) sym).getStructType().sym();
                 structSymTab = ((StructDefSym) tempSym).getSymTable();
             } else { // LHS is not a struct type
-                ErrMsg.fatal(id.lineNum(), id.charNum(), "Dot-access of non-struct type");
+                ErrMsg.fatal(id.lineNum(), id.lineChar(), "Dot-access of non-struct type");
                 badAccess = true;
             }
         }
@@ -1454,7 +1454,7 @@ class DotAccessExpNode extends ExpNode {
                 sym = loc.sym();
 
                 if (sym == null) { // no struct to look up RHS
-                    ErrMsg.fatal(loc.lineNum(), loc.charNum(), "Dot-access of non-struct type");
+                    ErrMsg.fatal(loc.lineNum(), loc.lineChar(), "Dot-access of non-struct type");
                     badAccess = true;
                 } else { // get the struct's symbol table in which to lookup RHS
                     if (sym instanceof StructDefSym) {
@@ -1478,7 +1478,7 @@ class DotAccessExpNode extends ExpNode {
 
             sym = structSymTab.lookupGlobal(myId.name()); // lookup
             if (sym == null) { // not found - RHS is not a valid field name
-                ErrMsg.fatal(myId.lineNum(), myId.charNum(), "Invalid struct field name");
+                ErrMsg.fatal(myId.lineNum(), myId.lineChar(), "Invalid struct field name");
                 badAccess = true;
             }
 
@@ -1527,6 +1527,63 @@ class AssignNode extends ExpNode {
         myExp.nameAnalysis(symTab);
     }
 
+    @Override
+    public Type typeCheck() {
+        Type leftType = myLhs.typeCheck();
+        Type rightType = myExp.typeCheck();
+        if (leftType.isErrorType() || rightType.isErrorType()) {
+            return new ErrorType(leftType.lineNum, leftType.lineChar);
+        }
+        int lineNum = leftType.lineNum;
+        int lineChar = leftType.lineChar;
+
+        if (!leftType.equals(rightType)) {
+            ErrMsg.fatal(lineNum, lineChar, "Type mismatch");
+            return new ErrorType(leftType.lineNum, leftType.lineChar);
+        }
+
+        if (leftType.isFnType()) {
+            ErrMsg.fatal(lineNum, lineChar, "Function assignment");
+            return new ErrorType(leftType.lineNum, leftType.lineChar);
+        }
+        if (leftType.isFnType()) {
+            ErrMsg.fatal(lineNum, lineChar, "Function assignment");
+            return new ErrorType(leftType.lineNum, leftType.lineChar);
+        }
+
+        if (leftType.isStructDefType()) {
+            ErrMsg.fatal(lineNum, lineChar, "Struct name assignment");
+            return new ErrorType(leftType.lineNum, leftType.lineChar);
+        }
+
+        if (leftType.isStructType()) {
+            ErrMsg.fatal(lineNum, lineChar, "Struct variable assignment");
+            return new ErrorType(leftType.lineNum, leftType.lineChar);
+        }
+
+        if (rightType.isFnType()) {
+            ErrMsg.fatal(lineNum, lineChar, "Function assignment");
+            return new ErrorType(rightType.lineNum, rightType.lineChar);
+        }
+        if (rightType.isFnType()) {
+            ErrMsg.fatal(lineNum, lineChar, "Function assignment");
+            return new ErrorType(rightType.lineNum, rightType.lineChar);
+        }
+
+        if (rightType.isStructDefType()) {
+            ErrMsg.fatal(lineNum, lineChar, "Struct name assignment");
+            return new ErrorType(rightType.lineNum, rightType.lineChar);
+        }
+
+        if (rightType.isStructType()) {
+            ErrMsg.fatal(lineNum, lineChar, "Struct variable assignment");
+            return new ErrorType(rightType.lineNum, rightType.lineChar);
+        }
+
+        return leftType;
+
+    }
+
     public void unparse(PrintWriter p, int indent) {
         if (indent != -1)
             p.print("(");
@@ -1540,6 +1597,7 @@ class AssignNode extends ExpNode {
     // 2 kids
     private ExpNode myLhs;
     private ExpNode myExp;
+
 }
 
 class CallExpNode extends ExpNode {
@@ -1560,6 +1618,44 @@ class CallExpNode extends ExpNode {
     public void nameAnalysis(SymTable symTab) {
         myId.nameAnalysis(symTab);
         myExpList.nameAnalysis(symTab);
+    }
+
+    @Override
+    public Type typeCheck() { // f()
+        Sym sym = myId.sym();
+        Type idType = myId.typeCheck();
+        int lineNum = idType.lineNum;
+        int lineChar = idType.lineChar;
+
+        if (!idType.isFnType()) { // i();
+            ErrMsg.fatal(lineNum, lineChar, "Attempt to call a non-function");
+            return new ErrorType(lineNum, lineChar);
+        }
+
+        Type returnType = ((FnSym) sym).getReturnType().getType();
+        returnType.lineNum = lineNum;
+        returnType.lineChar = lineChar;
+
+        int actualNumParams = myExpList.getLength();
+        int expectedNumParams = ((FnSym) sym).getNumParams();
+
+        if (actualNumParams != expectedNumParams) {
+            ErrMsg.fatal(lineNum, lineChar, "Function call with wrong number of args");
+            return returnType;
+        }
+
+        List<Type> actualParamTypes = myExpList.getTypeList();
+        List<Type> expectedParamTypes = ((FnSym) sym).getParamTypes();
+
+        for (int i = 0; i < actualNumParams; i++) {
+            Type actualType = actualParamTypes.get(i);
+            Type expectedType = expectedParamTypes.get(i);
+
+            if (!actualType.isErrorType() && !actualType.equals(expectedType))
+                ErrMsg.fatal(actualType.lineNum, actualType.lineChar, "Type of actual does not match type of formal");
+        }
+
+        return returnType;
     }
 
     // ** unparse **
@@ -1623,6 +1719,16 @@ class UnaryMinusNode extends UnaryExpNode {
         super(exp);
     }
 
+    @Override
+    public Type typeCheck() {
+        Type temp = myExp.typeCheck();
+        if (!temp.isIntType()) {
+            ErrMsg.fatal(temp.lineNum, temp.lineChar, "Arithmetic operator applied to non-numeric operand");
+            return new ErrorType(temp.lineNum, temp.lineChar);
+        }
+        return temp;
+    }
+
     public void unparse(PrintWriter p, int indent) {
         p.print("(-");
         myExp.unparse(p, 0);
@@ -1633,6 +1739,16 @@ class UnaryMinusNode extends UnaryExpNode {
 class NotNode extends UnaryExpNode {
     public NotNode(ExpNode exp) {
         super(exp);
+    }
+
+    @Override
+    public Type typeCheck() {
+        Type temp = myExp.typeCheck();
+        if (!temp.isBoolType()) {
+            ErrMsg.fatal(temp.lineNum, temp.lineChar, "Logical operator applied to non-bool operand");
+            return new ErrorType(temp.lineNum, temp.lineChar);
+        }
+        return temp;
     }
 
     public void unparse(PrintWriter p, int indent) {
