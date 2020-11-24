@@ -11,8 +11,15 @@ void fi(int i){}
 void fii(int i1, int i2){}
 void fib(int i, bool b){}
 void fbi(bool b, int i){}
-void fbb(bool b, bool b){}
+void fbb(bool b, bool i){}
 
+
+void test_write(){
+    cout << f;      
+    cout << S;      
+    cout << s;      
+    cout << fi(i);    
+}
 
 // Read
 void test_read(){
@@ -261,3 +268,21 @@ void test_assignment() {
     s = s;     
 }
 
+
+void main(){
+    cout << P + 1;              // P + 1 is an error; the write is OK
+    i = (true + 3) * 4;         // true + 3 is an error; the * is OK
+    i = true && (false || 3);   // false || 3 is an error; the && is OK
+    fi("a" * 4);                // "a" * 4 is an error; the call is OK
+    i = 1 + p();                // p() is an error; the + is OK
+    b = (true + 3) == i;        // true + 3 is an error; the == is OK
+                                // regardless of the type of x
+
+
+    i = true + "hello";      // one error for each of the non-int operands of the +
+    i = 1 + f1(true);        // one for the bad arg type and one for the 2nd operand of the +
+    i = 1 + fi(1, 2);        // one for the wrong number of args and one for the 2nd operand of the +
+    return 3+true;           // in a void function: one error for the 2nd operand to +
+                             // and one for returning a value
+
+}
