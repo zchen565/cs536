@@ -158,7 +158,7 @@ public class P6 {
 		}
 
 		//////////////////////////
-		astRoot.codeGen(this.outFile);
+		astRoot.codeGen();// check whether we need the output file as parameter
 		//////////////////////////
 
 		return P6.RESULT_CORRECT;
