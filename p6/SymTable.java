@@ -72,11 +72,8 @@ public class SymTable {
     }
     // added
 
-    public int getDepth() {
+    public int getSize() {
         return list.size();
     }
 
-    public int getLocalCount() {
-        return list.get(0).size();
-    }
 }
