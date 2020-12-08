@@ -3,7 +3,7 @@ import java.io.*;
 import java_cup.runtime.*;
 
 /**
- * %This is the main program to test the egg parser.%
+ * %This is the main program to test the Carrot parser.%
  *
  * There should be 2 command-line arguments: 1. the file to be parsed 2. the
  * output MIPS file
@@ -79,6 +79,7 @@ public class P6 {
 		} catch (FileNotFoundException ex) {
 			throw new BadOutfileException(ex, filename);
 		}
+		Codegen.p = outFile;
 	}
 
 	/**
@@ -157,9 +158,7 @@ public class P6 {
 			return P6.RESULT_TYPE_ERROR;
 		}
 
-		//////////////////////////
-		astRoot.codeGen();// check whether we need the output file as parameter
-		//////////////////////////
+		astRoot.codeGen();
 
 		return P6.RESULT_CORRECT;
 	}

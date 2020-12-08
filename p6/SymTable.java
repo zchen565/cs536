@@ -76,4 +76,8 @@ public class SymTable {
         return list.size();
     }
 
+    public int getLocalCount() {
+        return list.get(0).size();
+    }
+
 }

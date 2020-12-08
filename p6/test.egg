@@ -1,8 +1,4 @@
 void main() {
     cout << "Hello world!";
-    cout << "\n";
+    
 }
-
-//need to change line 600
-
-//1120 write statement? whether the type is the type 
